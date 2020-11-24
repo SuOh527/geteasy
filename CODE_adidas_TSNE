@@ -1,0 +1,86 @@
+from __future__ import print_function
+import nltk
+import re
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import nltk.collocations 
+from nltk.stem import WordNetLemmatizer
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.decomposition import LatentDirichletAllocation 
+from sklearn.manifold import TSNE
+
+""" --------- """
+# Corpus
+directory_path = '/Users/osuhyeon/NLTK_court_document/'
+Case1_file_path = ['Adidas Complaint 2015-9-14',  
+                    'Adidas Opinion and Order 2016-02-12', 
+                    'Adidas Opinion and Order 2016-04-16',
+                    'Adidas Opinion and Order 2017-08-03',
+                    'Adidas Court Opinion 2018-3-10'
+                   ]
+Case2_file_path = ['JennyYoo_Complaint_2018-10-26', 
+                    'JennyYoo Discovery Order 2019-12-16'
+                   ]
+Case3_file_path = ['PUMA Complaint 2017-3-31'
+                  ]
+
+path_list = [directory_path + file + '.txt' for file in Case1_file_path]
+
+
+# Dictionary
+stopwords = nltk.corpus.stopwords.words('english')
+stopwords.extend(['-', 'et', 'al', 'llc', 'inc', 'called', 'would', 'have'])
+corpus = []
+
+for file in path_list:
+    line = open(file, 'r').readlines()
+    lines = [li.lower() for li in line if li not in stopwords]
+    linew = [re.sub('r[^A-Za-z]+', ' ', li) for li in lines]
+    linew2 = [re.sub('plaintiff', 'adidas', li2) for li2 in linew]
+    linew3 = [re.sub('defendant', 'SKECHERS', li3) for li3 in linew2]
+
+    lemmas = [WordNetLemmatizer().lemmatize(w, 'v') 
+              for w in linew3 
+              if w not in stopwords]    
+
+    corpus.extend(lemmas)   
+
+import Proceeding_LDA
+lda_operator = Proceeding_LDA.Proceeding_LDA()
+ngram_train_fit_transformed, lda_train_fit_transformed, lda_train_perplexity = lda_operator.Proceeding_LDA(
+    n_components=5, 
+    n_features=1500, 
+    train_data=corpus)
+
+np.save('adidas_ngram.npy', ngram_train_fit_transformed)
+np.save('adidas_lda.npy', lda_train_fit_transformed)
+print("lda_train_perplexity: %d" % lda_train_perplexity)
+lda_train_perplexities = []
+lda_train_perplexities.append(lda_train_perplexity)
+
+""" --------- """
+
+lda_train_perplexities = [37]
+lda_train_fit_transformed = np.load('adidas_lda.npy')
+
+import Proceeding_TSNE
+TSNE_operator = Proceeding_TSNE.Proceeding_TSNE()
+tsne_y = TSNE_operator.Proceeding_TSNE(
+    n_components = 2, 
+    lda_train_perplexities = lda_train_perplexities, 
+    lda_trained_data = lda_train_fit_transformed)
+
+np.save('adidas_tsne.npy', tsne_y)
+
+""" --------- """
+
+tsne_y = np.load('adidas_tsne.npy')
+lda_train_fit_transformed = np.load('adidas_lda.npy')
+
+import Proceeding_TSNE_vis
+tsne_vis_operator = Proceeding_TSNE_vis.tsne_vis()
+tsne_vis_operator.pandas_tsne_scatterplot(
+    tsne_data = tsne_y, 
+    lda_data = lda_train_fit_transformed)
+

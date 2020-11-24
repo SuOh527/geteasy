@@ -1,0 +1,58 @@
+import pandas as pd
+import numpy as np
+import re
+import nltk
+from nltk.stem import WordNetLemmatizer
+import nltk.collocations 
+
+from gensim.models import word2vec
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
+
+
+# origianl txt files
+directory_path = '/Users/osuhyeon/NLTK_court_document/'
+Case1_file_path = ['Adidas Complaint 2015-9-14',  
+                    'Adidas Opinion and Order 2016-02-12', 
+                    'Adidas Opinion and Order 2016-04-16',
+                    'Adidas Opinion and Order 2017-08-03',
+                    'Adidas Court Opinion 2018-3-10'
+                   ]
+Case2_file_path = ['JennyYoo_Complaint_2018-10-26', 
+                    'JennyYoo Discovery Order 2019-12-16'
+                   ]
+Case3_file_path = ['PUMA Complaint 2017-3-31'
+                  ]
+
+path_list = [directory_path + file + '.txt' for file in Case2_file_path]
+
+# stopwords
+stopwords = nltk.corpus.stopwords.words('english')
+stopwords.extend(['-', 'et', 'al', 'llc', 'inc', 'called', 'would', 'have'])
+
+# corpus
+corpus = []
+
+for path in path_list:
+    lines = open(path, 'r').readlines()
+    
+    for li in lines:
+        if li in stopwords:
+            lines.remove(li)
+    
+    newline = [WordNetLemmatizer().lemmatize(li, 'v') for li in lines]
+    newline2 = [re.sub(r'[^\s\w]+', '', newli) for newli in newline]
+    corpus.append(newline2)
+
+print("len(corpus): %d " %(len(corpus)))
+
+"""
+model = word2vec.Word2Vec(
+    corpus, 
+    size = 100, 
+    window = 20, 
+    min_count = 200, 
+    workers = 4)
+
+model.wv['jenny']
+"""

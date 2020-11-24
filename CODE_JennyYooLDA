@@ -1,0 +1,132 @@
+# https://www.nltk.org/howto/collocations.html
+
+from __future__ import print_function
+import nltk
+import re
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn
+import nltk.collocations 
+import xml.etree.ElementTree as ET
+from nltk.stem import WordNetLemmatizer
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.decomposition import LatentDirichletAllocation 
+from sklearn.manifold import TSNE
+
+
+# Corpus
+directory_path = '/Users/osuhyeon/NLTK_court_document/'
+Case1_file_path = ['Adidas Complaint 2015-9-14',  
+                    'Adidas Opinion and Order 2016-02-12', 
+                    'Adidas Opinion and Order 2016-04-16',
+                    'Adidas Opinion and Order 2017-08-03',
+                    'Adidas Court Opinion 2018-3-10'
+                   ]
+Case2_file_path = ['JennyYoo_Complaint_2018-10-26', 
+                    'JennyYoo Discovery Order 2019-12-16'
+                   ]
+Case3_file_path = ['PUMA Complaint 2017-3-31'
+                  ]
+
+path_list = [directory_path + file + '.txt' for file in Case2_file_path]
+
+
+# Dictionary
+stopwords = nltk.corpus.stopwords.words('english')
+stopwords.extend(['-', 'et', 'al', 'llc', 'inc', 'called', 'would', 'have'])
+corpus = []
+
+for file in path_list:
+    line = open(file, 'r').readlines()
+    lines = [li.lower() for li in line if li not in stopwords]
+    linew = [re.sub('r[^A-Za-z]+', ' ', li) for li in lines]
+    linew2 = [re.sub('jy', 'Jenny Yoo', li2) for li2 in linew]
+    linew3 = [re.sub('db', "David's Bridal", li3) for li3 in linew2]
+
+    lemmas = [WordNetLemmatizer().lemmatize(w, 'v') 
+              for w in linew3 
+              if w not in stopwords]    
+
+    corpus.extend(lemmas)   
+
+# Words_Collocation
+# Split Train Data, Test Data
+# n_features = numbers of column in LDA, least common multiple 360 of 12,15,18
+n_top_words = 20
+n_features = 1000 
+
+train_data = corpus[:][:]
+print("train_data: %s" % type(train_data))
+
+
+# LDA
+# LDA uses Term Frequency = CountVectorizer
+# (LDA) Train Data : fit and transform
+# (LDA) Test Data : unfit and transform
+# n_component = number of topics
+
+# (TF) Train Data : fit and transform
+# (TF) Test Data : unfit and transform
+
+# CountVectorizer_ component : topic
+# CountVectorizer_ feature : term frequency
+
+n_components = 6
+ngram_tf = CountVectorizer(stop_words = stopwords, ngram_range=(2,2))
+ngram_train_fit_transformed1 = ngram_tf.fit_transform(train_data)
+ngram_train_fit_transformed2 = ngram_train_fit_transformed1.reshape(-1, n_components)
+
+print("ngram_train_fit_transformed1:", type(ngram_train_fit_transformed1))
+print("ngram_train_fit_transformed1:", np.shape(ngram_train_fit_transformed1))
+
+print("ngram_train_fit_transformed2:", type(ngram_train_fit_transformed2))
+print("ngram_train_fit_transformed2:", np.shape(ngram_train_fit_transformed2))
+
+"""
+for i in range(1,4,1):
+    n_components = i
+    ngram_tf = CountVectorizer(stop_words = stopwords, ngram_range=(2,2), max_features = n_features)
+    ngram_train_fit_transformed = ngram_tf.fit_transform(train_data).reshape(-1, n_components)
+    print("Fitting LDA models with tf features,", " n_components = %d, n_features = %d" % (n_components, n_features))
+    
+    lda = LatentDirichletAllocation(
+        n_components = n_components, 
+        learning_method = 'online', 
+        random_state = 0)
+
+    lda_train_fit_transformed  = lda.fit_transform(ngram_train_fit_transformed)
+    lda_train_perplexity = lda.perplexity(lda_train_fit_transformed)
+    print('sklearn perplexity: train = %3f' % (lda_train_perplexity))
+"""
+
+for i in range(5,21,5):
+    n_components = i
+    ngram_tf = CountVectorizer(stop_words = stopwords, ngram_range=(2,2), max_features = n_features)
+    ngram_train_fit_transformed = ngram_tf.fit_transform(train_data).reshape(-1, n_components)
+    print("Fitting LDA models with tf features,", " n_components = %d, n_features = %d" % (n_components, n_features))
+    
+    lda = LatentDirichletAllocation(
+        n_components = n_components, 
+        learning_method = 'online', 
+        random_state = 0)
+
+    lda_train_fit_transformed  = lda.fit_transform(ngram_train_fit_transformed)
+    lda_train_perplexity = lda.perplexity(lda_train_fit_transformed)
+    print('sklearn perplexity: train = %3f' % (lda_train_perplexity))
+
+
+"""
+train_data: <class 'list'>
+ngram_train_fit_transformed1: <class 'scipy.sparse.csr.csr_matrix'>
+ngram_train_fit_transformed1: (567, 5670)
+ngram_train_fit_transformed2: <class 'scipy.sparse.coo.coo_matrix'>
+ngram_train_fit_transformed2: (535815, 6)
+Fitting LDA models with tf features,  n_components = 5, n_features = 1000
+sklearn perplexity: train = 37.143890
+Fitting LDA models with tf features,  n_components = 10, n_features = 1000
+sklearn perplexity: train = 959.752733
+Fitting LDA models with tf features,  n_components = 15, n_features = 1000
+sklearn perplexity: train = 23723.087232
+Fitting LDA models with tf features,  n_components = 20, n_features = 1000
+sklearn perplexity: train = 301003.384062
+"""
