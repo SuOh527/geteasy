@@ -17,9 +17,13 @@ gplus_username:
 disqus_username: 
 
 # Build settings
+# Conversion
 markdown: kramdown
 highlighter: rouge
 permalink: /:title/
+lsi: false
+excerpt_separator: "\n\n"
+incremental: false
 
 
 # html minify
