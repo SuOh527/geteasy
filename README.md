@@ -1,2 +1,2 @@
 # geteasy
-# Python, R, C 복습을 위한 블로깅입니다.
+# Python, R, C 복습 블로그입니다.
