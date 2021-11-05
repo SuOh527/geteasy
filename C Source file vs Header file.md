@@ -3,8 +3,8 @@ layout: post
 type:  
 title: "C Source file vs. Header file"
 date: 2021-11-05 17:00:00 
-category: C 
-hash-tag: C
+category: c
+hash-tag: c
   
 ---
 
