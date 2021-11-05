@@ -1,1 +1,1 @@
-# Python, R, C 복습 블로그입니다.
+# Python, R, C 복습 중입니다.
