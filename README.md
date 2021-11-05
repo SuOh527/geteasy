@@ -1,2 +1,2 @@
 # geteasy
-I'm interested in 'Image data processing' and 'Visualizing statistic data'.
+# Python, R, C 복습을 위한 블로깅입니다.
